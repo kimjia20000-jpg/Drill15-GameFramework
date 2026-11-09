@@ -1,8 +1,10 @@
 from math import pi
 
 from pico2d import get_canvas_width, get_time, load_image
-from sdl2 import (SDL_KEYDOWN, SDL_KEYUP, SDLK_LEFT, SDLK_RIGHT,
-                  SDLK_SPACE)
+from sdl2 import (
+    SDL_KEYDOWN, SDL_KEYUP,
+    SDLK_LEFT, SDLK_RIGHT, SDLK_SPACE
+)
 from transitions import Machine
 
 import game_world
@@ -26,14 +28,26 @@ class Boy:
             model=self,
             states=['IDLE', 'SLEEP', 'RUN'],
             transitions=[
-                {'trigger': 'fall_asleep',
-                 'source': 'IDLE', 'dest': 'SLEEP'},
-                {'trigger': 'wake_up',
-                 'source': 'SLEEP', 'dest': 'IDLE'},
-                {'trigger': 'start_run',
-                 'source': ['IDLE', 'SLEEP'], 'dest': 'RUN'},
-                {'trigger': 'stop_run',
-                 'source': 'RUN', 'dest': 'IDLE'},
+                {
+                    'trigger': 'fall_asleep',
+                    'source': 'IDLE',
+                    'dest': 'SLEEP'
+                },
+                {
+                    'trigger': 'wake_up',
+                    'source': 'SLEEP',
+                    'dest': 'IDLE'
+                },
+                {
+                    'trigger': 'start_run',
+                    'source': ['IDLE', 'SLEEP'],
+                    'dest': 'RUN'
+                },
+                {
+                    'trigger': 'stop_run',
+                    'source': 'RUN',
+                    'dest': 'IDLE'
+                },
             ],
             initial='IDLE',
             auto_transitions=False,
@@ -55,22 +69,35 @@ class Boy:
             self.ball_type = ball_type
 
     def fire_ball(self):
-        ball = Ball(self.x, self.y, self.face_dir * 10)
+        # 0번을 선택한 경우 공을 생성하지 않는다.
+        if self.ball_type == 0:
+            return
+
+        ball = Ball(
+            self.x,
+            self.y,
+            self.face_dir * 10,
+            self.ball_type
+        )
+
         game_world.add_object(ball)
 
     def handle_event(self, event):
+        # Sleep에서 SPACE는 깨어나기만 한다.
         if (event.type == SDL_KEYDOWN and
                 event.key == SDLK_SPACE and
                 self.state == 'SLEEP'):
             self.wake_up()
             return
 
+        # Idle과 Run에서 SPACE는 선택한 공을 발사한다.
         if (event.type == SDL_KEYDOWN and
                 event.key == SDLK_SPACE and
                 self.state in ('IDLE', 'RUN')):
             self.fire_ball()
             return
 
+        # 좌우 방향키 입력 처리
         if (event.type not in (SDL_KEYDOWN, SDL_KEYUP) or
                 event.key not in (SDLK_LEFT, SDLK_RIGHT)):
             return
@@ -80,8 +107,10 @@ class Boy:
         else:
             self.pressed_keys.discard(event.key)
 
-        direction = (int(SDLK_RIGHT in self.pressed_keys) -
-                     int(SDLK_LEFT in self.pressed_keys))
+        direction = (
+            int(SDLK_RIGHT in self.pressed_keys)
+            - int(SDLK_LEFT in self.pressed_keys)
+        )
 
         if direction != 0:
             self.dir = direction
@@ -104,7 +133,10 @@ class Boy:
         elif self.state == 'RUN':
             self.frame = (self.frame + 1) % 8
             self.x += self.dir * 5
-            self.x = max(25, min(get_canvas_width() - 25, self.x))
+            self.x = max(
+                25,
+                min(get_canvas_width() - 25, self.x)
+            )
 
     def draw(self):
         if self.state == 'SLEEP':
@@ -113,7 +145,9 @@ class Boy:
 
             self.image.clip_composite_draw(
                 self.frame * 100, 300, 100, 100,
-                angle, flip, self.x, self.y - 30, 100, 100
+                angle, flip,
+                self.x, self.y - 30,
+                100, 100
             )
 
         elif self.state == 'RUN':
