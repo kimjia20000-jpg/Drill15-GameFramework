@@ -1,6 +1,7 @@
 from pico2d import *
 
 import game_framework
+import game_world
 import play_mode
 
 
@@ -23,17 +24,15 @@ def resume():
 
 
 def update():
-    # 아이템 창이 열려 있어도 게임은 계속 진행한다.
+    # 창이 열려 있어도 소년과 공은 계속 업데이트한다.
     play_mode.update()
 
 
 def render():
     clear_canvas()
 
-    # 진행 중인 게임 화면을 먼저 그린다.
-    play_mode.game_world.render()
+    game_world.render()
 
-    # 게임 화면 위에 아이템 선택 이미지를 그린다.
     image.draw(
         get_canvas_width() // 2,
         get_canvas_height() // 2
@@ -47,3 +46,14 @@ def handle_events():
         if event.type == SDL_QUIT:
             game_framework.quit()
             return
+
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_i:
+            if getattr(event, 'repeat', 0):
+                continue
+
+            game_framework.pop_mode()
+            return
+
+        else:
+            # 이동 및 발사 입력은 계속 처리한다.
+            play_mode.boy.handle_event(event)
