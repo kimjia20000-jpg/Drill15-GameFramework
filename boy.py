@@ -19,6 +19,9 @@ class Boy:
         self.face_dir = 1
         self.pressed_keys = set()
 
+        # 0: 볼 없음, 1: 작은 볼, 2: 큰 볼
+        self.ball_type = 1
+
         self.machine = Machine(
             model=self,
             states=['IDLE', 'SLEEP', 'RUN'],
@@ -45,6 +48,11 @@ class Boy:
 
     def on_enter_RUN(self):
         self.frame = 0
+
+    def select_ball(self, ball_type):
+        # 유효한 공 종류만 저장한다.
+        if ball_type in (0, 1, 2):
+            self.ball_type = ball_type
 
     def fire_ball(self):
         ball = Ball(self.x, self.y, self.face_dir * 10)
@@ -78,8 +86,10 @@ class Boy:
         if direction != 0:
             self.dir = direction
             self.face_dir = direction
+
             if self.state in ('IDLE', 'SLEEP'):
                 self.start_run()
+
         elif self.state == 'RUN':
             self.dir = 0
             self.stop_run()
@@ -90,6 +100,7 @@ class Boy:
                 self.fall_asleep()
             else:
                 self.frame = (self.frame + 1) % 8
+
         elif self.state == 'RUN':
             self.frame = (self.frame + 1) % 8
             self.x += self.dir * 5
@@ -99,15 +110,24 @@ class Boy:
         if self.state == 'SLEEP':
             angle = pi / 2 if self.face_dir == 1 else -pi / 2
             flip = '' if self.face_dir == 1 else 'h'
+
             self.image.clip_composite_draw(
                 self.frame * 100, 300, 100, 100,
                 angle, flip, self.x, self.y - 30, 100, 100
             )
+
         elif self.state == 'RUN':
             row = 100 if self.face_dir == 1 else 0
-            self.image.clip_draw(self.frame * 100, row, 100, 100,
-                                 self.x, self.y)
+
+            self.image.clip_draw(
+                self.frame * 100, row, 100, 100,
+                self.x, self.y
+            )
+
         else:
             row = 300 if self.face_dir == 1 else 200
-            self.image.clip_draw(self.frame * 100, row, 100, 100,
-                                 self.x, self.y)
+
+            self.image.clip_draw(
+                self.frame * 100, row, 100, 100,
+                self.x, self.y
+            )
